@@ -118,7 +118,7 @@ $(document).ready(function () {
 <div id="data-analysis" class="section level3">
 <h3>Data Analysis</h3>
 <p><strong>Load Data</strong></p>
-<pre class="r"><code>setwd(&quot;/Users/Pura/Desktop/CourseraR/Machine Learning/project/data&quot;)
+<pre class="r"><code>setwd(&quot;/Users/Pura/Desktop/CourseraR/MachineLearning/project/data&quot;)
 training&lt;-read.csv(&quot;pml-training.csv&quot;)
 testing&lt;-read.csv(&quot;pml-testing.csv&quot;)
 dim(training)</code></pre>
@@ -146,6 +146,7 @@ myTrain&lt;-myTrain[, MostNA==F]
 myTest&lt;-myTest[, MostNA==F]
 testing&lt;-testing[, MostNA==F]</code></pre>
 <p><strong>Principal Component Analysis</strong></p>
+<p>pca is used to reduce the variables with high correlations.</p>
 <pre class="r"><code>preProc&lt;-preProcess(myTrain,method = &quot;pca&quot;)
 
 myTrain&lt;-predict(preProc, myTrain)
@@ -160,7 +161,8 @@ testing&lt;-testing[, firstCol: lastCol]</code></pre>
 </div>
 <div id="model-fitting" class="section level3">
 <h3>Model Fitting</h3>
-<p>We will use k-fold cross validation method in the model fitting to make sure the best model is selected</p>
+<p>We will use k-fold cross validation method in the model fitting to help with the accuracy. We will use classification tree and random forrest. Then compare the results</p>
+<p><strong>Classification Tree</strong></p>
 <pre class="r"><code>set.seed(328)
 
 trControl&lt;-trainControl(method = &quot;cv&quot;, number = 3)
@@ -172,10 +174,10 @@ print(Fit_tree$finalModel)</code></pre>
 ##       * denotes terminal node
 ## 
 ## 1) root 11776 8428 A (0.28 0.19 0.17 0.16 0.18)  
-##   2) PC22&gt;=-0.3024402 8057 4839 A (0.4 0.25 0.13 0.11 0.11)  
-##     4) PC14&gt;=-1.697355 7545 4362 A (0.42 0.26 0.14 0.1 0.067) *
-##     5) PC14&lt; -1.697355 512  105 E (0.068 0 0 0.14 0.79) *
-##   3) PC22&lt; -0.3024402 3719 2464 E (0.035 0.076 0.26 0.29 0.34) *</code></pre>
+##   2) PC22&lt; 0.2936934 8058 4816 A (0.4 0.25 0.13 0.11 0.11)  
+##     4) PC11&gt;=-0.8083148 6376 3242 A (0.49 0.24 0.15 0.084 0.033) *
+##     5) PC11&lt; -0.8083148 1682 1003 E (0.064 0.27 0.071 0.19 0.4) *
+##   3) PC22&gt;=0.2936934 3718 2443 E (0.029 0.079 0.26 0.29 0.34) *</code></pre>
 <pre class="r"><code>pred_tree&lt;-predict(Fit_tree, myTest)
 length(pred_tree)</code></pre>
 <pre><code>## [1] 7846</code></pre>
@@ -184,41 +186,39 @@ length(pred_tree)</code></pre>
 ## 
 ##           Reference
 ## Prediction    A    B    C    D    E
-##          A 2119    0    0    0  113
-##          B 1332    0    0    0  186
-##          C  725    0    0    0  643
-##          D  515    0    0    0  771
-##          E  361    0    0    0 1081
+##          A 2077    0    0    0  155
+##          B 1048    0    0    0  470
+##          C  656    0    0    0  712
+##          D  361    0    0    0  925
+##          E  126    0    0    0 1316
 ## 
 ## Overall Statistics
 ##                                           
-##                Accuracy : 0.4079          
-##                  95% CI : (0.3969, 0.4188)
-##     No Information Rate : 0.6439          
+##                Accuracy : 0.4324          
+##                  95% CI : (0.4215, 0.4435)
+##     No Information Rate : 0.544           
 ##     P-Value [Acc &gt; NIR] : 1               
 ##                                           
-##                   Kappa : 0.2119          
+##                   Kappa : 0.2546          
 ##  Mcnemar's Test P-Value : NA              
 ## 
 ## Statistics by Class:
 ## 
 ##                      Class: A Class: B Class: C Class: D Class: E
-## Sensitivity            0.4194       NA       NA       NA   0.3869
-## Specificity            0.9596   0.8065   0.8256   0.8361   0.9285
-## Pos Pred Value         0.9494       NA       NA       NA   0.7497
-## Neg Pred Value         0.4776       NA       NA       NA   0.7325
-## Prevalence             0.6439   0.0000   0.0000   0.0000   0.3561
-## Detection Rate         0.2701   0.0000   0.0000   0.0000   0.1378
+## Sensitivity            0.4866       NA       NA       NA   0.3678
+## Specificity            0.9567   0.8065   0.8256   0.8361   0.9705
+## Pos Pred Value         0.9306       NA       NA       NA   0.9126
+## Neg Pred Value         0.6097       NA       NA       NA   0.6468
+## Prevalence             0.5440   0.0000   0.0000   0.0000   0.4560
+## Detection Rate         0.2647   0.0000   0.0000   0.0000   0.1677
 ## Detection Prevalence   0.2845   0.1935   0.1744   0.1639   0.1838
-## Balanced Accuracy      0.6895       NA       NA       NA   0.6577</code></pre>
+## Balanced Accuracy      0.7217       NA       NA       NA   0.6691</code></pre>
+<p><strong>Random Forest</strong></p>
 <pre class="r"><code>set.seed(328)
 
 trControl&lt;-trainControl(method = &quot;cv&quot;, number = 3)
-Fit_rf&lt;-train(classe~., method = &quot;rf&quot;, trControl = trControl, data = myTrain)</code></pre>
-<pre><code>## Loading required package: randomForest
-## randomForest 4.6-12
-## Type rfNews() to see new features/changes/bug fixes.</code></pre>
-<pre class="r"><code>print(Fit_rf$finalModel)</code></pre>
+Fit_rf&lt;-train(classe~., method = &quot;rf&quot;, trControl = trControl, data = myTrain)
+print(Fit_rf$finalModel)</code></pre>
 <pre><code>## 
 ## Call:
 ##  randomForest(x = x, y = y, mtry = param$mtry) 
@@ -226,48 +226,49 @@ Fit_rf&lt;-train(classe~., method = &quot;rf&quot;, trControl = trControl, data 
 ##                      Number of trees: 500
 ## No. of variables tried at each split: 2
 ## 
-##         OOB estimate of  error rate: 1.15%
+##         OOB estimate of  error rate: 1.14%
 ## Confusion matrix:
 ##      A    B    C    D    E class.error
-## A 3341    6    0    0    1 0.002090800
-## B   20 2234   24    1    0 0.019745502
-## C    1   23 2016   14    0 0.018500487
-## D    0    0   37 1891    2 0.020207254
-## E    0    0    1    6 2158 0.003233256</code></pre>
+## A 3343    5    0    0    0 0.001493429
+## B   28 2235   16    0    0 0.019306713
+## C    2   24 2018    7    3 0.017526777
+## D    0    0   41 1886    3 0.022797927
+## E    0    0    1    4 2160 0.002309469</code></pre>
 <pre class="r"><code>pred_rf&lt;-predict(Fit_rf, myTest)
 confusionMatrix(myTest$classe, pred_rf)</code></pre>
 <pre><code>## Confusion Matrix and Statistics
 ## 
 ##           Reference
 ## Prediction    A    B    C    D    E
-##          A 2229    2    0    0    1
-##          B   21 1481   14    2    0
-##          C    0   16 1342    8    2
-##          D    0    0   38 1247    1
-##          E    0    0    0    2 1440
+##          A 2224    7    0    0    1
+##          B   14 1481   23    0    0
+##          C    0   16 1340   10    2
+##          D    0    0   40 1245    1
+##          E    0    0    0   10 1432
 ## 
 ## Overall Statistics
 ##                                           
-##                Accuracy : 0.9864          
-##                  95% CI : (0.9835, 0.9888)
-##     No Information Rate : 0.2868          
+##                Accuracy : 0.9842          
+##                  95% CI : (0.9812, 0.9868)
+##     No Information Rate : 0.2852          
 ##     P-Value [Acc &gt; NIR] : &lt; 2.2e-16       
 ##                                           
-##                   Kappa : 0.9827          
+##                   Kappa : 0.98            
 ##  Mcnemar's Test P-Value : NA              
 ## 
 ## Statistics by Class:
 ## 
 ##                      Class: A Class: B Class: C Class: D Class: E
-## Sensitivity            0.9907   0.9880   0.9627   0.9905   0.9972
-## Specificity            0.9995   0.9942   0.9960   0.9941   0.9997
-## Pos Pred Value         0.9987   0.9756   0.9810   0.9697   0.9986
-## Neg Pred Value         0.9963   0.9972   0.9920   0.9982   0.9994
-## Prevalence             0.2868   0.1911   0.1777   0.1605   0.1840
-## Detection Rate         0.2841   0.1888   0.1710   0.1589   0.1835
+## Sensitivity            0.9937   0.9847   0.9551   0.9842   0.9972
+## Specificity            0.9986   0.9942   0.9957   0.9938   0.9984
+## Pos Pred Value         0.9964   0.9756   0.9795   0.9681   0.9931
+## Neg Pred Value         0.9975   0.9964   0.9903   0.9970   0.9994
+## Prevalence             0.2852   0.1917   0.1788   0.1612   0.1830
+## Detection Rate         0.2835   0.1888   0.1708   0.1587   0.1825
 ## Detection Prevalence   0.2845   0.1935   0.1744   0.1639   0.1838
-## Balanced Accuracy      0.9951   0.9911   0.9793   0.9923   0.9985</code></pre>
-<p>Apparently random forest provides better result.</p>
+## Balanced Accuracy      0.9962   0.9894   0.9754   0.9890   0.9978</code></pre>
+<p>Random forest gives an accuracy of 98%</p>
+<p>So we choose random forest model to predict the 20 test samples.</p>
 </div>
 <div id="prediction" class="section level3">
 <h3>Prediction</h3>
